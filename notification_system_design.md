@@ -264,3 +264,209 @@ db.notifications.updateOne(
 The system uses a scalable NoSQL architecture with indexing, sharding, caching, and pagination to efficiently handle large-scale notification workloads.
 
 ---
+
+# Stage 3: Query Optimization and Indexing
+
+## Given Query
+
+```sql
+SELECT * FROM notifications
+WHERE studentId = 1042 AND isRead = false
+ORDER BY createdAt DESC;
+```
+
+---
+
+## Is this Query Correct?
+
+Yes, the query is logically correct. It retrieves unread notifications for a specific student sorted by latest first.
+
+However, it is **inefficient for large datasets**.
+
+---
+
+## Why is the Query Slow?
+
+As the dataset grows (millions of records), performance degrades due to:
+
+* Full table scan when indexes are absent
+* Sorting overhead on large result sets
+* Fetching unnecessary columns using `SELECT *`
+
+---
+
+## Should We Add Indexes on Every Column?
+
+No, adding indexes on every column is not effective because:
+
+* It increases storage overhead
+* Slows down insert/update operations
+* Not all columns are frequently queried
+
+👉 Indexing should be strategic and query-driven.
+
+---
+
+## Optimized Index Strategy
+
+Use a **composite index**:
+
+```sql
+CREATE INDEX idx_notifications_student_read_time
+ON notifications (studentId, isRead, createdAt DESC);
+```
+
+### Benefits:
+
+* Efficient filtering on `studentId` and `isRead`
+* Faster sorting using indexed order
+* Eliminates full table scan
+
+---
+
+## Optimized Query
+
+```sql
+SELECT id, type, message, createdAt
+FROM notifications
+WHERE studentId = 1042 AND isRead = false
+ORDER BY createdAt DESC
+LIMIT 20;
+```
+
+### Improvements:
+
+* Avoids unnecessary data fetch
+* Uses pagination
+* Leverages index efficiently
+
+---
+
+## Query: Placement Notifications in Last 7 Days
+
+```sql
+SELECT id, message, createdAt
+FROM notifications
+WHERE notificationType = 'Placement'
+AND createdAt >= NOW() - INTERVAL 7 DAY;
+```
+
+---
+
+## Time Complexity
+
+* Without index → **O(n)**
+* With index → **O(log n)**
+
+---
+
+## Summary
+
+The query can be significantly optimized using:
+
+* Composite indexing
+* Pagination
+* Selective field retrieval
+
+This ensures efficient performance at scale.
+
+---
+
+# Stage 4: System Scaling and Performance Optimization
+
+## Problem
+
+Notifications are fetched on every page load for each student.
+This results in:
+
+* High database load
+* Increased response time
+* Poor user experience
+
+---
+
+## Proposed Solutions
+
+### 1. Caching (Redis)
+
+* Cache frequently accessed notifications (especially unread ones)
+* Reduce repeated database queries
+
+**Flow:**
+
+* First request → fetch from DB → store in cache
+* Subsequent requests → serve from cache
+
+---
+
+### 2. Pagination
+
+* Load notifications in chunks (e.g., 20 per request)
+* Prevents large data transfer
+
+---
+
+### 3. Lazy Loading / Infinite Scroll
+
+* Load data only when user scrolls
+* Reduces initial load time
+
+---
+
+### 4. Asynchronous Processing (Queue)
+
+* Use message queues (Kafka/RabbitMQ) for notification creation
+* Decouple write-heavy operations from user requests
+
+---
+
+### 5. Database Optimization
+
+* Use indexing (from Stage 3)
+* Partition tables based on time
+* Archive old notifications
+
+---
+
+### 6. Read Replicas
+
+* Use replica databases for read-heavy operations
+* Reduces load on primary DB
+
+---
+
+## Trade-offs
+
+| Strategy      | Advantage               | Trade-off                     |
+| ------------- | ----------------------- | ----------------------------- |
+| Caching       | Fast response time      | Cache invalidation complexity |
+| Pagination    | Reduced load            | Requires multiple requests    |
+| Queues        | Scalable writes         | Added system complexity       |
+| Read Replicas | Better read performance | Data replication lag          |
+
+---
+
+## Recommended Approach
+
+A combination of:
+
+* **Caching (Redis)**
+* **Pagination**
+* **Read replicas**
+
+provides the best balance of performance and scalability.
+
+---
+
+## Summary
+
+To handle large-scale traffic, the system should:
+
+* Reduce direct DB access using caching
+* Optimize queries using indexing
+* Distribute load using replicas and queues
+
+This ensures high performance and a smooth user experience.
+
+---
+
