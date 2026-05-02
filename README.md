@@ -31,6 +31,10 @@ vehicle-scheduler-backend/
 │   └── priority.js
 │
 ├── screenshots/
+│   ├── test-log.png
+│   ├── scheduler.png
+│   ├── scheduler-visualized.png
+│   └── priority.png
 │
 ├── notification_system_design.md
 ├── package.json
@@ -100,9 +104,7 @@ GET /priority
 
 ![Priority](screenshots/priority.png)
 
-
-```
-
+---
 
 ## 🧠 Approach
 
