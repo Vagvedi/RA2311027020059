@@ -98,19 +98,12 @@ GET /priority
 
 ### 🔹 Priority Notifications (Stage 6)
 
-👉 Add your Stage 6 screenshot here:
 
 ```
-screenshots/priority.png
-```
-
-Then update:
-
-```md
 ![Priority](screenshots/priority.png)
+
 ```
 
----
 
 ## 🧠 Approach
 
