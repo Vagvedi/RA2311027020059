@@ -303,7 +303,7 @@ No, adding indexes on every column is not effective because:
 * Slows down insert/update operations
 * Not all columns are frequently queried
 
-👉 Indexing should be strategic and query-driven.
+ Indexing should be strategic and query-driven.
 
 ---
 
@@ -470,3 +470,221 @@ This ensures high performance and a smooth user experience.
 
 ---
 
+# Stage 5: Reliable Notification Delivery System
+
+## Issues in Given Implementation
+
+```python
+function notify_all(student_ids, message):
+    for student_id in student_ids:
+        send_email(student_id, message)
+        save_to_db(student_id, message)
+        push_to_app(student_id, message)
+```
+
+### Problems:
+
+1. **No Fault Tolerance**
+
+   * If `send_email` fails midway, system stops or becomes inconsistent
+
+2. **No Retry Mechanism**
+
+   * Failed requests (e.g., 200 students) are lost permanently
+
+3. **Tight Coupling**
+
+   * Email, DB, and push notification are executed synchronously
+
+4. **Slow Performance**
+
+   * Processing 50,000 users sequentially is inefficient
+
+5. **Data Inconsistency**
+
+   * Email may fail but DB still updated (or vice versa)
+
+---
+
+## Should DB Save and Email Sending Happen Together?
+
+ No, they should NOT be tightly coupled.
+
+### Reason:
+
+* External services (email APIs) can fail independently
+* DB operations should remain reliable and consistent
+* Separation improves fault tolerance and scalability
+
+---
+
+## Proposed Solution: Asynchronous Event-Driven Architecture
+
+### Key Concepts:
+
+* Use a **message queue (Kafka / RabbitMQ)**
+* Decouple DB writes and notification delivery
+* Implement retries and failure handling
+
+---
+
+## Improved Workflow
+
+1. Save notification to DB
+2. Publish event to queue
+3. Worker services consume events:
+
+   * Email service
+   * Push notification service
+4. Retry on failure
+
+---
+
+## Revised Pseudocode
+
+```python
+function notify_all(student_ids, message):
+    for student_id in student_ids:
+        save_to_db(student_id, message)
+
+        enqueue("notification_queue", {
+            "studentId": student_id,
+            "message": message
+        })
+```
+
+---
+
+### Worker Service (Email Sender)
+
+```python
+function process_email_queue(event):
+    try:
+        send_email(event.studentId, event.message)
+    except:
+        retry(event)
+```
+
+---
+
+### Worker Service (Push Notification)
+
+```python
+function process_push_queue(event):
+    try:
+        push_to_app(event.studentId, event.message)
+    except:
+        retry(event)
+```
+
+---
+
+## Retry Strategy
+
+* Use exponential backoff
+* Limit retries (e.g., 3–5 attempts)
+* Move failed events to a **dead-letter queue (DLQ)**
+
+---
+
+## Idempotency
+
+* Ensure duplicate messages are not sent
+* Use unique event IDs
+* Check before processing
+
+---
+
+## Benefits of New Design
+
+* High scalability (handles 50,000+ users)
+* Fault tolerance (failures don’t break system)
+* Faster processing (parallel workers)
+* Reliable delivery (retry + DLQ)
+
+---
+
+## Summary
+
+The redesigned system uses:
+
+* Asynchronous processing
+* Message queues
+* Retry mechanisms
+* Idempotent operations
+
+This ensures reliable, scalable, and fault-tolerant notification delivery.
+
+---
+# Stage 6: Priority Notification System
+
+## Approach
+
+To display the top ‘n’ most important unread notifications, priority is determined based on:
+
+1. **Type Weight**
+
+   * Placement = 3
+   * Result = 2
+   * Event = 1
+
+2. **Recency**
+
+   * Newer notifications have higher priority
+
+---
+
+## Priority Calculation
+
+A combined score is calculated:
+
+```
+score = (type_weight × constant) + timestamp
+```
+
+This ensures that:
+
+* Higher type importance dominates
+* Among same type, recent notifications rank higher
+
+Due to priority-based ranking (Placement > Result > Event), lower priority notifications like Events may not appear in the top N results if higher priority notifications are sufficient to fill the list.
+
+---
+
+## Implementation
+
+* Fetch notifications using API
+* Assign weights based on type
+* Convert timestamp to numeric value
+* Sort by score in descending order
+* Return top N notifications
+
+---
+
+## Handling Continuous Updates
+
+To efficiently maintain top N:
+
+* Use a **min-heap (priority queue)** of size N
+* Insert new notifications dynamically
+* Remove lowest priority when size exceeds N
+
+This ensures **O(log N)** insertion time
+
+---
+
+## Benefits
+
+* Efficient ranking system
+* Real-time adaptability
+* Scalable for large datasets
+* Works without database dependency
+
+---
+
+## Summary
+
+The system uses a hybrid scoring mechanism combining importance and recency, along with efficient data structures, to maintain a dynamic priority inbox.
+
+
+---

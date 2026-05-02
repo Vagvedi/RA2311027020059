@@ -14,6 +14,18 @@ app.get("/test-log", async (req, res) => {
   }
 });
 
+const getPriorityNotifications = require("../notification_app_be/priority");
+
+app.get("/priority", async (req, res) => {
+  try {
+    const data = await getPriorityNotifications(10);
+    res.json(data);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Priority fetch failed");
+  }
+});
+
 app.get("/schedule", async (req, res) => {
   try {
     const result = await runScheduler();
