@@ -4,6 +4,16 @@ A backend microservice system designed to optimize vehicle maintenance schedulin
 
 ---
 
+## 🚀 Quick Preview
+
+* Logging Middleware → `/test-log`
+* Scheduler Output → `/schedule`
+* Priority Notifications → `/priority`
+
+👉 Designed to handle real-world backend workloads with optimization and scalability.
+
+---
+
 ## 📌 Features
 
 * 🔹 Logging Middleware with external API integration
@@ -11,6 +21,19 @@ A backend microservice system designed to optimize vehicle maintenance schedulin
 * 🔹 Priority Notification System (Placement > Result > Event)
 * 🔹 REST APIs for scheduling and logging
 * 🔹 System Design for scalable notification architecture
+
+---
+
+## 🏛️ System Architecture
+
+```
+Client → Express Server → Services
+                      ↳ Logging Middleware
+                      ↳ Scheduler Engine
+                      ↳ Notification Service
+
+External APIs → Data Source
+```
 
 ---
 
@@ -84,18 +107,21 @@ GET /priority
 
 ### 🔹 Logging Middleware Test
 
+Validates external logging integration
 ![Test Log](screenshots/test-log.png)
 
 ---
 
 ### 🔹 Vehicle Scheduling Output
 
+Optimized task allocation maximizing impact under constraints
 ![Scheduler](screenshots/scheduler.png)
 
 ---
 
 ### 🔹 Scheduler Visualization
 
+Structured and readable output representation
 ![Scheduler Visualization](screenshots/scheduler-visualized.png)
 
 ---
@@ -127,6 +153,50 @@ GET /priority
   * Placement > Result > Event
 * Sorted by recency + importance
 * Returns top N notifications efficiently
+
+---
+
+## 🧠 Key Engineering Decisions
+
+* Used knapsack-based optimization for scheduling efficiency
+* Decoupled notification system from scheduler for scalability
+* Implemented priority ranking using weighted scoring
+* Used external logging service to simulate real-world observability
+
+---
+
+## ⚡ Performance Considerations
+
+* Pagination used to limit response size
+* Sorting optimized using priority scoring
+* Efficient async API handling
+* Designed for scalability with caching/queue support
+
+---
+
+## 🛡️ Edge Cases Handled
+
+* No valid tasks within time constraint
+* Large dataset handling
+* API failures or delays
+* Priority conflicts resolved using timestamp
+
+---
+
+## 🚀 Future Improvements
+
+* Add Redis caching for faster reads
+* Introduce message queue (Kafka/RabbitMQ)
+* Build frontend dashboard
+* Add authentication layer
+
+---
+
+## 🌍 Real-World Relevance
+
+* Optimizes limited resource allocation (mechanic hours)
+* Simulates real notification systems
+* Demonstrates scalable backend architecture
 
 ---
 
