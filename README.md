@@ -98,9 +98,8 @@ GET /priority
 
 ### 🔹 Priority Notifications (Stage 6)
 
-
-```
 ![Priority](screenshots/priority.png)
+
 
 ```
 
